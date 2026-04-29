@@ -1,0 +1,49 @@
+# Dependencies
+**/node_modules/
+**/node_modules_old/
+
+# Build outputs
+**/dist/
+**/dev-dist/
+**/build/
+**/coverage/
+**/.vite/
+
+# Environment files
+**/.env
+**/.env.*
+!**/.env.example
+
+# Logs
+**/logs/
+**/*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Runtime / temp
+**/tmp/
+**/temp/
+**/.cache/
+**/.parcel-cache/
+**/.eslintcache
+**/.nyc_output/
+
+# Uploads and generated files
+backend/uploads/
+Indusecc-Backend/uploads/
+
+# OS / editor files
+.DS_Store
+Thumbs.db
+Desktop.ini
+**/.idea/
+**/.vscode/*
+!**/.vscode/extensions.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
