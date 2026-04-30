@@ -65,9 +65,22 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true;
+  if (CORS_ORIGIN.includes(origin)) return true;
+  if (/^https:\/\/[a-z0-9-]+\.vercel\.app$/i.test(origin)) return true;
+  if (/^http:\/\/(localhost|127\.0\.0\.1):\d+$/i.test(origin)) return true;
+  return false;
+};
+
 // CORS
 app.use(cors({
-  origin: CORS_ORIGIN,
+  origin: (origin, callback) => {
+    if (isAllowedOrigin(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error(`Origen no permitido por CORS: ${origin}`));
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -85,6 +98,35 @@ if (NODE_ENV === 'development') {
 // Body parsing
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
+
+let serverReadyPromise;
+
+const initializeServer = async () => {
+  if (NODE_ENV === 'test') return;
+  if (serverReadyPromise) return serverReadyPromise;
+
+  serverReadyPromise = (async () => {
+    if (mongoose.connection.readyState === 0) {
+      await mongoose.connect(MONGO_URI);
+      logger.info(' Conectado a MongoDB');
+    }
+
+    await seedInitialData();
+    await runCollaboratorSeed();
+    await seedConsultorRisks();
+  })();
+
+  return serverReadyPromise;
+};
+
+app.use('/api', async (req, res, next) => {
+  try {
+    await initializeServer();
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
 
 // Rutas
 app.use('/api/auth', authRoutes);
@@ -641,24 +683,16 @@ const seedConsultorRisks = async () => {
   }
 };
 
-NODE_ENV !== 'test' && mongoose
-  .connect(MONGO_URI)
-  .then(async () => {
-    logger.info(' Conectado a MongoDB')
-
-    try {
-      await seedInitialData()
-      await runCollaboratorSeed()
-      await seedConsultorRisks()
-      app.listen(PORT, () => logger.info(` Backend iniciado en puerto ${PORT}`))
-    } catch (error) {
-      logger.error(' Error durante la inicializacion del servidor', error)
-      process.exit(1)
-    }
-  })
-  .catch((error) => {
-    logger.error(' Error de conexi??n a MongoDB', error)
-  })
+if (require.main === module && NODE_ENV !== 'test') {
+  initializeServer()
+    .then(() => {
+      app.listen(PORT, () => logger.info(` Backend iniciado en puerto ${PORT}`));
+    })
+    .catch((error) => {
+      logger.error(' Error durante la inicializacion del servidor', error);
+      process.exit(1);
+    });
+}
 
 module.exports = app
 

@@ -9,7 +9,9 @@ const JWT_SECRET = process.env.JWT_SECRET || 'tu_secreto_muy_largo_y_aleatorio_a
 const JWT_EXPIRE = process.env.JWT_EXPIRE || '1h';
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'otro_secreto_largo_aleatorio';
 const JWT_REFRESH_EXPIRE = process.env.JWT_REFRESH_EXPIRE || '7d';
-const CORS_ORIGIN = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['http://localhost:5173', 'http://localhost:5174'];
+const CORS_ORIGIN = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(',').map(origin => origin.trim()).filter(Boolean)
+  : ['http://localhost:5173', 'http://localhost:5174'];
 const EMAIL_SERVICE = process.env.EMAIL_SERVICE || 'gmail';
 const EMAIL_USER = process.env.EMAIL_USER;
 const EMAIL_PASSWORD = process.env.EMAIL_PASSWORD;
